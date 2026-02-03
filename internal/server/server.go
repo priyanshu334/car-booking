@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/priyanshu334/go_car_book/internal/config"
 	"github.com/priyanshu334/go_car_book/internal/db"
 	"github.com/priyanshu334/go_car_book/internal/logger"
@@ -29,6 +30,11 @@ func Start() {
 		logger.Log.Fatal("auto migration failed", zap.Error(err))
 	}
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",
+		AllowCredentials: true,
+		AllowHeaders:     "Origin, Content-Type, Accept",
+	}))
 
 	userRepo := user.NewRepository(db.DB)
 	userService := user.NewService(userRepo)
