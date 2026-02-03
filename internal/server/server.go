@@ -11,6 +11,7 @@ import (
 	"github.com/priyanshu334/go_car_book/internal/db"
 	"github.com/priyanshu334/go_car_book/internal/logger"
 	"github.com/priyanshu334/go_car_book/internal/middleware"
+	"github.com/priyanshu334/go_car_book/internal/modules/booking"
 	"github.com/priyanshu334/go_car_book/internal/modules/car"
 	"github.com/priyanshu334/go_car_book/internal/modules/user"
 	"go.uber.org/zap"
@@ -58,6 +59,14 @@ func Start() {
 	carRoutes := app.Group("/cars")
 	carRoutes.Get("/", carHandler.ListCars)
 	carRoutes.Post("/", middleware.RequireAuth(), carHandler.AddCar)
+
+	db.DB.AutoMigrate(&booking.Booking{})
+	bookinRepo := booking.NewRepository(db.DB)
+	bookingService := booking.NewService(bookinRepo, db.DB)
+
+	bookingHandler := booking.NewHandler(bookingService)
+	bookingRoutes := app.Group("/booking", middleware.RequireAuth())
+	bookingRoutes.Get("/", bookingHandler.CreateBooking)
 	go func() {
 		if err := app.Listen(":8080"); err != nil {
 			panic(err)
