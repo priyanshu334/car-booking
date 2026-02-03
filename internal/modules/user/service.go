@@ -4,11 +4,13 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/priyanshu334/go_car_book/internal/modules/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service interface {
 	Register(name, email, password string) error
+	Login(email, password string) (string, string, error)
 }
 
 type service struct {
@@ -38,4 +40,26 @@ func (s *service) Register(name, email, password string) error {
 	}
 
 	return nil
+}
+
+func (s *service) Login(email, password string) (string, string, error) {
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		return "", "", errors.New("invalid credintials")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password)); err != nil {
+		return "", "", errors.New("invalid credintials")
+	}
+	access, err := auth.GenerateAccessToken(user.ID.String(), string(user.Role))
+	if err != nil {
+		return "", "", err
+	}
+
+	refresh, err := auth.GenerateRefreshToken(user.ID.String())
+	if err != nil {
+		return "", "", err
+	}
+
+	return access, refresh, err
+
 }

@@ -32,6 +32,7 @@ func Start() {
 	userHandler := user.NewHandler(userService)
 	api := app.Group("/api")
 	api.Post("/users/register", userHandler.Register)
+	api.Post("/users/login", userHandler.Login)
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(
 			fiber.Map{
@@ -39,6 +40,14 @@ func Start() {
 			},
 		)
 
+	})
+
+	protected := app.Group("/protected")
+	protected.Get("/me", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"user_id": c.Locals("user_id"),
+			"role":    c.Locals("role"),
+		})
 	})
 	go func() {
 		if err := app.Listen(":8080"); err != nil {
